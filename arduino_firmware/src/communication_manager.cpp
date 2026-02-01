@@ -1,6 +1,21 @@
 #include "communication_manager.h"
 #include <Arduino.h>
-#include <vector>
+
+// Lightweight fixed-size buffer for embedded use to avoid depending on C++ std::vector
+struct SmallBuf {
+  static const size_t CAP = 1024;
+  uint8_t data_[CAP];
+  size_t sz = 0;
+  void clear() { sz = 0; }
+  void reserve(size_t) { /* no-op for fixed capacity */ }
+  void push_back(uint8_t b) { if (sz < CAP) data_[sz++] = b; }
+  void append(const uint8_t* p, size_t len) { size_t tocopy = len; if (tocopy > CAP - sz) tocopy = CAP - sz; memcpy(data_ + sz, p, tocopy); sz += tocopy; }
+  size_t size() const { return sz; }
+  uint8_t* data() { return data_; }
+  const uint8_t* data() const { return data_; }
+  uint8_t& operator[](size_t i) { return data_[i]; }
+  const uint8_t& operator[](size_t i) const { return data_[i]; }
+};
 
 namespace {
 static const uint8_t FRAME_START = 0xAA;
@@ -13,7 +28,7 @@ struct RxContext {
   uint16_t len = 0;
   uint16_t read = 0;
   uint8_t type = 0;
-  std::vector<uint8_t> buffer;
+  SmallBuf buffer;
   uint8_t crc_h = 0, crc_l = 0;
 } rx;
 
@@ -23,7 +38,7 @@ FrameHandler handlers[256] = {0};
 // ACK tracking for sendFrameWithAck
 volatile bool ackReceived = false;
 uint8_t ackOriginType = 0; // original frame type that was acked
-std::vector<uint8_t> ackPayload;
+SmallBuf ackPayload;
 
 // Active transport (defaults to serial transport below)
 Transport* activeTransport = nullptr;
@@ -45,7 +60,7 @@ void internalAckHandler(const uint8_t* payload, uint16_t len) {
   if (len < 1) return;
   ackOriginType = payload[0];
   ackPayload.clear();
-  if (len > 1) ackPayload.insert(ackPayload.end(), payload + 1, payload + len);
+  if (len > 1) ackPayload.append(payload + 1, (size_t)(len - 1));
   ackReceived = true;
 }
 
@@ -376,10 +391,10 @@ void poll() {
         rx.crc_l = b;
         uint16_t crc_in = ((uint16_t)rx.crc_h << 8) | rx.crc_l;
         // compute CRC on type + payload
-        std::vector<uint8_t> tmp;
+        SmallBuf tmp;
         tmp.reserve(rx.len);
         tmp.push_back(rx.type);
-        tmp.insert(tmp.end(), rx.buffer.begin(), rx.buffer.end());
+        tmp.append(rx.buffer.data(), rx.buffer.size());
         uint16_t calc = calc_crc16(tmp.data(), tmp.size());
         if (calc == crc_in) {
           if (handlers[rx.type]) handlers[rx.type](rx.buffer.data(), (uint16_t)rx.buffer.size());
@@ -403,10 +418,10 @@ bool sendFrame(uint8_t type, const uint8_t* payload, uint16_t len) {
   activeTransport->write(header, 4);
   if (len) activeTransport->write(payload, len);
   // crc on type+payload
-  std::vector<uint8_t> tmp;
+  SmallBuf tmp;
   tmp.reserve(frameLen);
   tmp.push_back(type);
-  for (uint16_t i = 0; i < len; ++i) tmp.push_back(payload[i]);
+  tmp.append(payload, len);
   uint16_t crc = calc_crc16(tmp.data(), tmp.size());
   uint8_t crcBytes[2] = { (uint8_t)(crc >> 8), (uint8_t)(crc & 0xFF) };
   activeTransport->write(crcBytes, 2);
