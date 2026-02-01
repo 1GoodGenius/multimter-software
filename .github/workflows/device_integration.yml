@@ -1,0 +1,32 @@
+name: Device Integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Run unit tests
+        run: pytest -q
+
+  flash-device:
+    if: ${{ secrets.DEVICE_PORT != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Flash device (if configured)
+        env:
+          DEVICE_PORT: ${{ secrets.DEVICE_PORT }}
+          AVRDUDE_CMD: ${{ secrets.AVRDUDE_CMD }}
+        run: |
+          python tools/ci_flash.py
