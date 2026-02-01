@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Multimeter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+</head>
+<body>
+    <header>
+        <h1>Digital Multimeter</h1>
+        <p>Precision Electrical Measurements</p>
+        <div class="connection-status">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="connectionStatus">Disconnected</span>
+        </div>
+    </header>
+
+    <main>
+        <div id="statusMessage" class="status-message info" style="display: none;">
+            Initializing multimeter...
+        </div>
+
+        <!-- Power Display -->
+        <div class="power-display">
+            <h2>Power Analysis</h2>
+            <div class="power-grid">
+                <div class="power-item">
+                    <div class="power-label">Active Power</div>
+                    <div class="power-value" id="activePower">0.00<span class="power-unit">W</span></div>
+                </div>
+                <div class="power-item">
+                    <div class="power-label">Reactive Power</div>
+                    <div class="power-value" id="reactivePower">0.00<span class="power-unit">VAR</span></div>
+                </div>
+                <div class="power-item">
+                    <div class="power-label">Apparent Power</div>
+                    <div class="power-value" id="apparentPower">0.00<span class="power-unit">VA</span></div>
+                </div>
+            </div>
+
+            <div class="efficiency-pf">
+                <div class="indicator-item">
+                    <div class="indicator-label">Power Factor</div>
+                    <div class="indicator-value" id="powerFactor">0.00</div>
+                    <div class="indicator-bar">
+                        <div class="indicator-fill" id="powerFactorBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="indicator-item">
+                    <div class="indicator-label">Efficiency</div>
+                    <div class="indicator-value" id="efficiency">0%</div>
+                    <div class="indicator-bar">
+                        <div class="indicator-fill" id="efficiencyBar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voltage, Current, Resistance Displays -->
+        <div class="meter-grid">
+            <div class="meter-display voltage">
+                <h2><span class="icon">⚡</span> Voltage</h2>
+                <div class="meter-value" id="voltageValue">0.00<span class="meter-unit">V</span></div>
+                <div class="meter-info">
+                    <span class="range-indicator" id="voltageRange">Auto Range</span>
+                    <div class="stability-indicator">
+                        <div class="stability-bar">
+                            <div class="stability-fill" id="voltageStability" style="width: 0%"></div>
+                        </div>
+                        <span id="voltageStabilityText">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meter-display current">
+                <h2><span class="icon">📊</span> Current</h2>
+                <div class="meter-value" id="currentValue">0.00<span class="meter-unit">A</span></div>
+                <div class="meter-info">
+                    <span class="range-indicator" id="currentRange">Auto Range</span>
+                    <div class="stability-indicator">
+                        <div class="stability-bar">
+                            <div class="stability-fill" id="currentStability" style="width: 0%"></div>
+                        </div>
+                        <span id="currentStabilityText">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meter-display resistance">
+                <h2><span class="icon">🔧</span> Resistance</h2>
+                <div class="meter-value" id="resistanceValue">0.00<span class="meter-unit">Ω</span></div>
+                <div class="meter-info">
+                    <span class="range-indicator" id="resistanceRange">Auto Range</span>
+                    <div class="stability-indicator">
+                        <div class="stability-bar">
+                            <div class="stability-fill" id="resistanceStability" style="width: 0%"></div>
+                        </div>
+                        <span id="resistanceStabilityText">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capacitance, Continuity, Temperature, Frequency Displays -->
+        <div class="meter-grid">
+            <div class="meter-display capacitance">
+                <h2><span class="icon">🔋</span> Capacitance</h2>
+                <div class="meter-value" id="capacitanceValue">0.00<span class="meter-unit">μF</span></div>
+                <div class="meter-info">
+                    <span class="range-indicator" id="capacitanceRange">Auto Range</span>
+                    <div class="stability-indicator">
+                        <div class="stability-bar">
+                            <div class="stability-fill" id="capacitanceStability" style="width: 0%"></div>
+                        </div>
+                        <span id="capacitanceStabilityText">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meter-display continuity">
+                <h2><span class="icon">🔌</span> Continuity</h2>
+                <div class="meter-value" id="continuityValue">Open<span class="meter-unit"></span></div>
+                <div class="meter-info">
+                    <span class="range-indicator" id="continuityRange">Beep Mode</span>
+                    <div class="stability-indicator">
+                        <div class="stability-bar">
+                            <div class="stability-fill" id="continuityStability" style="width: 0%"></div>
+                        </div>
+                        <span id="continuityStabilityText">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meter-display temperature">
+                <h2><span class="icon">🌡️</span> Temperature</h2>
+                <div class="meter-value" id="temperatureValue">25.0<span class="meter-unit">°C</span></div>
+                <div class="meter-info">
+                    <span class="range-indicator" id="temperatureRange">Celsius</span>
+                    <div class="stability-indicator">
+                        <div class="stability-bar">
+                            <div class="stability-fill" id="temperatureStability" style="width: 0%"></div>
+                        </div>
+                        <span id="temperatureStabilityText">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Frequency and Duty Cycle Displays -->
+        <div class="meter-grid">
+            <div class="meter-display frequency">
+                <h2><span class="icon">〰️</span> Frequency</h2>
+                <div class="meter-value" id="frequencyValue">0.00<span class="meter-unit">Hz</span></div>
+                <div class="meter-info">
+                    <span class="range-indicator" id="frequencyRange">Auto Range</span>
+                    <div class="stability-indicator">
+                        <div class="stability-bar">
+                            <div class="stability-fill" id="frequencyStability" style="width: 0%"></div>
+                        </div>
+                        <span id="frequencyStabilityText">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meter-display duty_cycle">
+                <h2><span class="icon">📈</span> Duty Cycle</h2>
+                <div class="meter-value" id="dutyCycleValue">0.0<span class="meter-unit">%</span></div>
+                <div class="meter-info">
+                    <span class="range-indicator" id="dutyCycleRange">Square Wave</span>
+                    <div class="stability-indicator">
+                        <div class="stability-bar">
+                            <div class="stability-fill" id="dutyCycleStability" style="width: 0%"></div>
+                        </div>
+                        <span id="dutyCycleStabilityText">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <h2>Meter Controls</h2>
+            <div class="control-group">
+                <div>
+                    <label for="voltageRange">Voltage Range</label>
+                    <select id="voltageRangeSelect">
+                        <option value="auto">Auto Range</option>
+                        <option value="2V">2V</option>
+                        <option value="20V">20V</option>
+                        <option value="200V">200V</option>
+                        <option value="1000V">1000V</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="currentRange">Current Range</label>
+                    <select id="currentRangeSelect">
+                        <option value="auto">Auto Range</option>
+                        <option value="2mA">2mA</option>
+                        <option value="20mA">20mA</option>
+                        <option value="200mA">200mA</option>
+                        <option value="10A">10A</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="resistanceRange">Resistance Range</label>
+                    <select id="resistanceRangeSelect">
+                        <option value="auto">Auto Range</option>
+                        <option value="200Ω">200Ω</option>
+                        <option value="2kΩ">2kΩ</option>
+                        <option value="20kΩ">20kΩ</option>
+                        <option value="200kΩ">200kΩ</option>
+                        <option value="2MΩ">2MΩ</option>
+                    </select>
+                </div>
+            </div>
+            <div class="control-group">
+                <div>
+                    <label for="measurementRate">Measurement Rate</label>
+                    <select id="measurementRate">
+                        <option value="fast">Fast (10 Hz)</option>
+                        <option value="normal" selected>Normal (5 Hz)</option>
+                        <option value="slow">Slow (1 Hz)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="displayMode">Display Mode</label>
+                    <select id="displayMode">
+                        <option value="value">Value Only</option>
+                        <option value="trend" selected>Trend</option>
+                        <option value="minmax">Min/Max</option>
+                        <option value="relative">Relative</option>
+                    </select>
+                </div>
+                <div>
+                    <label for=" backlight">Backlight</label>
+                    <select id="backlight">
+                        <option value="off">Off</option>
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            </div>
+            <div class="button-group">
+                <button onclick="zeroMeter()">Zero/Relative</button>
+                <button onclick="holdValue()">Hold</button>
+                <button onclick="toggleMinmax()">Min/Max</button>
+                <button onclick="calibrate()" class="secondary">Calibrate</button>
+                <button onclick="saveData()" class="secondary">Save Data</button>
+                <button onclick="exportData()" class="secondary">Export CSV</button>
+            </div>
+        </div>
+
+        <!-- Ultrasonic Transducer Display -->
+        <div class="transducer-group">
+            <div class="transducer">
+                <svg class="transducer-img" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- First ultrasonic transducer - white disc with sound waves -->
+                    <circle cx="50" cy="50" r="15" fill="white" stroke="#333" stroke-width="2"/>
+                    <!-- Sound waves emanating from the first transducer -->
+                    <path d="M 50 35 Q 45 30, 50 25" fill="none" stroke="#2196F3" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 35 Q 55 30, 50 25" fill="none" stroke="#2196F3" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 65 Q 45 70, 50 75" fill="none" stroke="#2196F3" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 65 Q 55 70, 50 75" fill="none" stroke="#2196F3" stroke-width="2" opacity="0.7"/>
+                    <path d="M 35 50 Q 30 45, 25 50" fill="none" stroke="#2196F3" stroke-width="2" opacity="0.7"/>
+                    <path d="M 35 50 Q 30 55, 25 50" fill="none" stroke="#2196F3" stroke-width="2" opacity="0.7"/>
+                    <path d="M 65 50 Q 70 45, 75 50" fill="none" stroke="#2196F3" stroke-width="2" opacity="0.7"/>
+                    <path d="M 65 50 Q 70 55, 75 50" fill="none" stroke="#2196F3" stroke-width="2" opacity="0.7"/>
+                    <!-- Outer ring -->
+                    <circle cx="50" cy="50" r="30" fill="none" stroke="#2196F3" stroke-width="1" opacity="0.3"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#2196F3" stroke-width="1" opacity="0.2"/>
+                </svg>
+                <div class="transducer-label">TX</div>
+            </div>
+            
+            <div class="transducer">
+                <svg class="transducer-img" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Second ultrasonic transducer - white disc with sound waves -->
+                    <circle cx="50" cy="50" r="15" fill="white" stroke="#333" stroke-width="2"/>
+                    <!-- Sound waves emanating from the second transducer -->
+                    <path d="M 50 35 Q 45 30, 50 25" fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 35 Q 55 30, 50 25" fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 65 Q 45 70, 50 75" fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 65 Q 55 70, 50 75" fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.7"/>
+                    <path d="M 35 50 Q 30 45, 25 50" fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.7"/>
+                    <path d="M 35 50 Q 30 55, 25 50" fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.7"/>
+                    <path d="M 65 50 Q 70 45, 75 50" fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.7"/>
+                    <path d="M 65 50 Q 70 55, 75 50" fill="none" stroke="#4CAF50" stroke-width="2" opacity="0.7"/>
+                    <!-- Outer ring -->
+                    <circle cx="50" cy="50" r="30" fill="none" stroke="#4CAF50" stroke-width="1" opacity="0.3"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#4CAF50" stroke-width="1" opacity="0.2"/>
+                </svg>
+                <div class="transducer-label">RX</div>
+            </div>
+            
+            <div class="transducer">
+                <svg class="transducer-img" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Third ultrasonic transducer - FIXED: white disc instead of black -->
+                    <circle cx="50" cy="50" r="15" fill="white" stroke="#333" stroke-width="2"/>
+                    <!-- Sound waves emanating from the third transducer -->
+                    <path d="M 50 35 Q 45 30, 50 25" fill="none" stroke="#FF9800" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 35 Q 55 30, 50 25" fill="none" stroke="#FF9800" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 65 Q 45 70, 50 75" fill="none" stroke="#FF9800" stroke-width="2" opacity="0.7"/>
+                    <path d="M 50 65 Q 55 70, 50 75" fill="none" stroke="#FF9800" stroke-width="2" opacity="0.7"/>
+                    <path d="M 35 50 Q 30 45, 25 50" fill="none" stroke="#FF9800" stroke-width="2" opacity="0.7"/>
+                    <path d="M 35 50 Q 30 55, 25 50" fill="none" stroke="#FF9800" stroke-width="2" opacity="0.7"/>
+                    <path d="M 65 50 Q 70 45, 75 50" fill="none" stroke="#FF9800" stroke-width="2" opacity="0.7"/>
+                    <path d="M 65 50 Q 70 55, 75 50" fill="none" stroke="#FF9800" stroke-width="2" opacity="0.7"/>
+                    <!-- Outer ring -->
+                    <circle cx="50" cy="50" r="30" fill="none" stroke="#FF9800" stroke-width="1" opacity="0.3"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#FF9800" stroke-width="1" opacity="0.2"/>
+                </svg>
+                <div class="transducer-label">Distance Sensor</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/meter.js') }}"></script>
+</body>
+</html>

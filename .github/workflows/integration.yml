@@ -1,0 +1,29 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyserial
+      - name: Run comm unit tests
+        run: |
+          python tools/test_comm.py
+      - name: Optional device integration (requires DEVICE_PORT secret)
+        if: ${{ secrets.DEVICE_PORT != '' }}
+        run: |
+          echo "Running integration on device port $DEVICE_PORT"
+          python tools/integration_ci.py --port $DEVICE_PORT

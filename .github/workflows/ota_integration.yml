@@ -1,0 +1,63 @@
+name: OTA Integration Tests
+
+on:
+  push:
+    paths:
+      - 'arduino_firmware/**'
+      - 'tools/**'
+      - 'docs/**'
+
+jobs:
+  fetch-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyserial ecdsa
+      - name: Fetch micro-ecc
+        run: |
+          python arduino_firmware/tools/fetch_uECC.py --outdir ../third_party/uECC
+      - name: Run comm unit tests
+        run: |
+          python arduino_firmware/tools/test_comm.py
+      - name: Lint tools
+        run: |
+          python -m pyflakes tools || true
+      - name: Install Arduino CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local sh
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+      - name: Install Arduino libraries
+        run: |
+          # Install board/driver libraries used by firmware
+          arduino-cli lib update-index
+          arduino-cli lib install "ILI9341_t3" || true
+          arduino-cli lib install "XPT2046_Touchscreen" || true
+          arduino-cli lib install "Encoder" || true
+          arduino-cli lib install "ADC" || true
+          arduino-cli lib install "ILI9341" || true
+          arduino-cli lib install "ILI9341_t3" || true
+          arduino-cli lib install "Adafruit_GFX" || true
+          arduino-cli lib install "Adafruit_BusIO" || true
+          arduino-cli lib list || true
+      - name: Compile firmware (Arduino)
+        run: |
+          python arduino_firmware/tools/fetch_uECC.py --outdir ../third_party/uECC
+          arduino-cli compile --fqbn arduino:avr:mega arduino_firmware --verbose --output-dir build 2>&1 | tee build/compile.log || true
+      - name: Assert uECC compiled into firmware
+        run: |
+          echo "Checking compile log for uECC references..."
+          if grep -n "uECC.c" build/compile.log; then echo "✅ uECC compile found in build log"; else echo "::error::uECC.c not found in compile log"; exit 1; fi
+      - name: Show build artifacts and sizes
+        run: |
+          ls -l build || true
+          if command -v avr-size >/dev/null 2>&1; then avr-size build/*.elf || true; fi
+          echo "--- compile.log ---"
+          sed -n '1,200p' build/compile.log || true
