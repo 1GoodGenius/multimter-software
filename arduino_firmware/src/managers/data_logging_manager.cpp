@@ -341,7 +341,7 @@ bool DataLoggingManager::startStreaming(const char* filename) {
   // Write header if file is new or empty
   activeStreamFile.println("timestamp_ms,voltage_V,current_A,is_anomaly");
   activeStreamFile.flush();
-  streamBuffer = String(""); streamBufferBytes = 0; streamWriteCount = 0;
+  streamBuffer[0] = '\0'; streamBufferLen = 0; streamWriteRetries = 0;
   streamingEnabled = true;
   Serial.print("[STREAM] Streaming to SD file: "); Serial.println(fname);
   return true;
@@ -350,12 +350,12 @@ bool DataLoggingManager::startStreaming(const char* filename) {
 void DataLoggingManager::stopStreaming() {
   if (activeStreamFile) {
     // flush any remaining buffer first
-    if (streamBuffer.length() > 0) flushStreamBuffer();
+    if (streamBufferLen > 0) flushStreamBuffer();
     activeStreamFile.flush();
     activeStreamFile.close();
   }
   streamingEnabled = false;
-  streamBuffer = String(""); streamBufferBytes = 0; streamWriteCount = 0;
+  streamBuffer[0] = '\0'; streamBufferLen = 0; streamWriteRetries = 0;
 }
 
 bool DataLoggingManager::isStreaming() {

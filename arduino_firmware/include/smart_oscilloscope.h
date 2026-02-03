@@ -3,7 +3,12 @@
 
 #include <Arduino.h>
 #include "ADC.h"
-#include <ILI9341_t3.h>
+#ifdef ARDUINO_ARCH_AVR
+  // Use Adafruit ILI9341 on AVR platforms
+  #include <Adafruit_ILI9341.h>
+#else
+  #include <ILI9341_t3.h>
+#endif
 #include <XPT2046_Touchscreen.h>
 #include <Encoder.h>
 #include <SD.h>

@@ -2,6 +2,9 @@
 #include <EEPROM.h>
 #include <SD.h>
 #include <Arduino.h>
+#ifdef __AVR__
+#include <avr/wdt.h>
+#endif
 
 // EEPROM layout (reuse existing offsets)
 #define EEPROM_OTA_PUBKEY_ADDR 0x500

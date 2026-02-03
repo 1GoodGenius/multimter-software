@@ -3,6 +3,8 @@
 #include "engines/measurement_engine.h"
 #include "engines/oscilloscope_engine.h"
 #include "managers/data_logging_manager.h"
+#include "managers/ota_manager.h"
+#include <EEPROM.h>
 #include "ui_controller.h"
 #include "communication_manager.h"
 #include <string.h>
@@ -426,7 +428,7 @@ void loop() {
           if (!dataLoggingManager.isSDCardAvailable()) { Serial.println("[SELFTEST] SD card: NOT PRESENT"); ok = false; } else Serial.println("[SELFTEST] SD card: OK");
           // Basic osc check
           Serial.print("[SELFTEST] Osc buffer size: "); Serial.println(oscilloscopeEngine.getBufferSize());
-          Serial.print("[SELFTEST] Valid samples available: "); Serial.println(oscilloscopeEngine.getSampleCount());
+          Serial.print("[SELFTEST] Valid samples available: "); Serial.println(oscilloscopeEngine.getValidSampleCount());
           Serial.print("[SELFTEST] Result: "); Serial.println(ok?"PASS":"FAIL");
         } else if (strncmp(cmdBuf, "AUTH_SETKEY", 11) == 0) {
           // Usage: AUTH_SETKEY <hexkey>

@@ -33,7 +33,7 @@ struct RxContext {
 } rx;
 
 // Handler table
-FrameHandler handlers[256] = {0};
+Comm::FrameHandler handlers[256] = {0};
 
 // ACK tracking for sendFrameWithAck
 volatile bool ackReceived = false;
@@ -96,9 +96,13 @@ void internalHelloHandler(const uint8_t* payload, uint16_t len) {
 // AUTH handler: supports either plaintext token (legacy) or HMAC(timestamp) when HMAC enabled
 void internalAuthHandler(const uint8_t* payload, uint16_t len) {
   // Legacy plaintext token: echo behavior when not using HMAC
-  if (!isHmacEnabled()) {
+  if (!Comm::isHmacEnabled()) {
     if (len == 0) { uint8_t r = FT_AUTH; Comm::sendFrame(FT_NACK, &r, 1); return; }
-    String t = String((const char*)payload, len);
+    char tbuf[65];
+    size_t copylen = len < (sizeof(tbuf)-1) ? len : (sizeof(tbuf)-1);
+    memcpy(tbuf, payload, copylen);
+    tbuf[copylen] = '\0';
+    String t = String(tbuf);
     if (t == expectedAuthToken) {
       authOK = true;
       uint8_t resp[2] = { FT_AUTH, 1 };
@@ -462,37 +466,8 @@ bool sendFrameWithAck(uint8_t type, const uint8_t* payload, uint16_t len, uint16
   }
   return false;
 }
-bool sendFrameWithAck(uint8_t type, const uint8_t* payload, uint16_t len, uint16_t timeoutMs, uint8_t retries, uint8_t* out_resp, uint16_t* out_len) {
-  for (uint8_t attempt = 0; attempt < retries; ++attempt) {
-    // clear ack state
-    ackReceived = false;
-    ackPayload.clear();
-    ackOriginType = 0;
 
-    // send
-    sendFrame(type, payload, len);
-
-    unsigned long start = millis();
-    while (millis() - start < timeoutMs) {
-      // allow incoming frames to be processed
-      poll();
-      if (ackReceived && ackOriginType == type) {
-        if (out_resp && out_len) {
-          *out_len = (uint16_t)ackPayload.size();
-          // copy up to out_len bytes
-          uint16_t copylen = min(*out_len, (uint16_t)64);
-          for (uint16_t i = 0; i < copylen; ++i) out_resp[i] = ackPayload[i];
-        }
-        return true;
-      }
-      delay(5);
-    }
-    // retry
-  }
-  return false;
-}
-
-void registerHandler(uint8_t type, FrameHandler handler) {
+void registerHandler(uint8_t type, Comm::FrameHandler handler) {
   handlers[type] = handler;
 }
 

@@ -5,6 +5,10 @@
 #include "ADC.h"
 #include "smart_oscilloscope.h"
 
+// Overload callback type used by MeasurementEngine
+using OverloadCallback = void (*)(bool overloaded);
+
+
 class MeasurementEngine {
 private:
   VoltageRange currentRange;
@@ -26,10 +30,7 @@ private:
   void setSmoothingAlpha(float a);
   float getSmoothingAlpha();
 
-  // Overload callback
-  typedef void (*OverloadCallback)(bool overloaded);
-  void setOverloadCallback(OverloadCallback cb);
-  OverloadCallback overloadCallback;
+  void (*overloadCallback)(bool overloaded);
   bool wasOverloaded;
   // Current channel calibration
   float currentCalibrationFactor;
@@ -39,6 +40,8 @@ private:
   float readRawVoltage();
 
 public:
+  typedef void (*OverloadCallback)(bool overloaded);
+  void setOverloadCallback(OverloadCallback cb);
   MeasurementEngine();
   bool initialize();
   float readVoltage();

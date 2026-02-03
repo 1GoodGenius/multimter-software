@@ -233,7 +233,7 @@ Recent firmware improvements (Measurement, Oscilloscope, Calculator, Data Loggin
 
 ## License
 
-This project is provided as-is for educational and hobbyist use. Use at your own risk.
+This project is provided as-is for educational use and still under building. Use at your own risk.
 
 ---
 

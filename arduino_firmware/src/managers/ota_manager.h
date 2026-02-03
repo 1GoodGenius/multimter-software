@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+// EEPROM layout (reuse existing offsets)
+#define EEPROM_OTA_PUBKEY_ADDR 0x500
+#define EEPROM_OTA_PENDING_FLAG (EEPROM_OTA_PUBKEY_ADDR + 128)
+
 namespace OTA {
 
 // Check if a pending validated update exists
